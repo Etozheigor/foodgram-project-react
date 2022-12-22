@@ -12,5 +12,9 @@ class User(AbstractUser):
     last_name = models.CharField(verbose_name='фамилия', blank=True, max_length=150)
     username = models.CharField(verbose_name='username', blank=True, max_length=150, unique=True)
     password = models.CharField(verbose_name='пароль', blank=True, max_length=150)
-    role = models.CharField(verbose_name='роль', default=USER, choices=ROLE_CHOICES)
+    role = models.CharField(verbose_name='роль', default=USER, choices=ROLE_CHOICES, max_length=20)
+
+    class Meta:
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
 
