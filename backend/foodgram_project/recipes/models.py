@@ -23,10 +23,11 @@ class Tag(models.Model):
 class Recipe(models.Model):
     text = models.TextField(verbose_name='Описание', blank=True)
     name = models.CharField(verbose_name='Название', blank=True, max_length=200)
-    cooking_time = models.PositiveSmallIntegerField(verbose_name='Время приготовления (в минутах)')
+    cooking_time = models.PositiveSmallIntegerField(verbose_name='Время приготовления в минутах')
     author = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='recipes', null=True)
     image = models.ImageField(upload_to='recipes/', null=True, blank=True)
     tags = models.ManyToManyField(Tag, through='RecipeTag', verbose_name='Теги', blank=False)
+    ingredients = models.ManyToManyField(Ingredient, through='RecipeIngredientAmount', verbose_name='Ингредиенты', blank=True)
 
     class Meta:
         verbose_name = 'Рецепт'
@@ -48,3 +49,20 @@ class RecipeIngredientAmount(models.Model):
     class Meta:
         verbose_name = 'Ингредиент рецепта'
         verbose_name_plural = 'Ингредиенты рецепта'
+
+
+class ShoppingCart(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    recipes = models.ManyToManyField(Recipe)
+
+    class Meta:
+        verbose_name = 'Список покупок'
+        verbose_name_plural = 'Списки покупок'
+
+class Favorite(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='Пользователь')
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, verbose_name='Рецепт')
+
+    class Meta:
+        verbose_name = 'Избраный рецепт'
+        verbose_name_plural = 'Избранные рецепты'
