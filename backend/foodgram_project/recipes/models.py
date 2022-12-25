@@ -85,3 +85,14 @@ class Favorite(models.Model):
 
     def __str__(self):
         return f'Избраные рецепты пользователя {self.user}'
+
+class Follow(models.Model):
+    follower = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='Пользователь', related_name='following')
+    following = models.ManyToManyField(User, verbose_name='Подписки')
+
+    class Meta:
+        verbose_name = 'Подписка'
+        verbose_name_plural = 'Подписки'
+
+    def __str__(self):
+        return f'Подписки пользоваеля {self.follower}'
