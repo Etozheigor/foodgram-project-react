@@ -3,7 +3,7 @@ from users.models import User
 
 
 class Ingredient(models.Model):
-    name = models.CharField(verbose_name= 'Название', blank=True, max_length=200)
+    name = models.CharField(verbose_name= 'Название', blank=False, max_length=200)
     measurment_unit = models.CharField(verbose_name='Единица измерения', blank=True, max_length=200)
 
     class Meta:
@@ -14,7 +14,7 @@ class Ingredient(models.Model):
         return f'{self.name}, {self.measurment_unit}'
 
 class Tag(models.Model):
-    name = models.CharField(verbose_name= 'Название', blank=True, max_length=200)
+    name = models.CharField(verbose_name= 'Название', blank=False, max_length=200)
     color = models.CharField(verbose_name='Цвет в HEX', null=True, max_length=7)
     slug = models.SlugField(verbose_name='Уникальный слаг', null=True, max_length=200)
 
@@ -26,13 +26,13 @@ class Tag(models.Model):
         return self.name
 
 class Recipe(models.Model):
-    text = models.TextField(verbose_name='Описание', blank=True)
-    name = models.CharField(verbose_name='Название', blank=True, max_length=200)
+    text = models.TextField(verbose_name='Описание', blank=False)
+    name = models.CharField(verbose_name='Название', blank=False, max_length=200)
     cooking_time = models.PositiveSmallIntegerField(verbose_name='Время приготовления в минутах')
     author = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='recipes', null=True)
-    image = models.ImageField(upload_to='recipes/', null=True, blank=True)
-    tags = models.ManyToManyField(Tag, through='RecipeTag', verbose_name='Теги', blank=False)
-    ingredients = models.ManyToManyField(Ingredient, through='RecipeIngredientAmount', verbose_name='Ингредиенты', blank=True)
+    image = models.ImageField(upload_to='recipes/', null=True, blank=False)
+    tags = models.ManyToManyField(Tag, through='RecipeTag', verbose_name='Теги')
+    ingredients = models.ManyToManyField(Ingredient, through='RecipeIngredientAmount', verbose_name='Ингредиенты', blank=False)
 
     class Meta:
         verbose_name = 'Рецепт'
