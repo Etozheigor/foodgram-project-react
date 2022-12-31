@@ -13,6 +13,7 @@ class RecipeAdmin(admin.ModelAdmin):
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
     search_fields = ('name',)
+    ordering = ('name',)
     inlines = (RecipeIngredientAmountInLine,)
 
 admin.site.register(Tag)
