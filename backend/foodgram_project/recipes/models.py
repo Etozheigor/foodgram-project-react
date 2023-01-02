@@ -4,14 +4,14 @@ from users.models import User
 
 class Ingredient(models.Model):
     name = models.CharField(verbose_name= 'Название', blank=False, max_length=200)
-    measurment_unit = models.CharField(verbose_name='Единица измерения', blank=True, max_length=200)
+    measurement_unit = models.CharField(verbose_name='Единица измерения', blank=True, max_length=200)
 
     class Meta:
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
 
     def __str__(self):
-        return f'{self.name}, {self.measurment_unit}'
+        return f'{self.name}, {self.measurement_unit}'
 
 class Tag(models.Model):
     name = models.CharField(verbose_name= 'Название', blank=False, max_length=200)
@@ -31,8 +31,13 @@ class Recipe(models.Model):
     cooking_time = models.PositiveSmallIntegerField(verbose_name='Время приготовления в минутах')
     author = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='recipes', null=True)
     image = models.ImageField(upload_to='recipes/', null=True, blank=False)
-    tags = models.ManyToManyField(Tag, through='RecipeTag', verbose_name='Теги')
-    ingredients = models.ManyToManyField(Ingredient, through='RecipeIngredientAmount', verbose_name='Ингредиенты', blank=False)
+    tags = models.ManyToManyField(Tag, through='RecipeTag', verbose_name='Теги', related_name='tags')
+    ingredients = models.ManyToManyField(
+        Ingredient, 
+        through='RecipeIngredientAmount', 
+        verbose_name='Ингредиенты', 
+        related_name='ingredients', 
+        blank=False)
 
     class Meta:
         verbose_name = 'Рецепт'
@@ -53,8 +58,8 @@ class RecipeTag(models.Model):
         return f'Теги рецепта {self.recipe}'
 
 class RecipeIngredientAmount(models.Model):
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
-    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name='recipe')
+    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE, related_name='ingredient')
     amount = models.PositiveIntegerField(verbose_name='Количество')
 
     class Meta:

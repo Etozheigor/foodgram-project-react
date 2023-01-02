@@ -5,10 +5,13 @@ from .models import Ingredient, Tag, Recipe, RecipeIngredientAmount, RecipeTag, 
 class RecipeIngredientAmountInLine(admin.TabularInline):
     model = RecipeIngredientAmount
 
+class RecipetagInLine(admin.TabularInline):
+    model = RecipeTag
+
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
     search_fields = ('author', 'name', 'tags')
-    inlines = (RecipeIngredientAmountInLine,)
+    inlines = (RecipeIngredientAmountInLine, RecipetagInLine)
 
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
