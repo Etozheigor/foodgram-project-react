@@ -26,18 +26,18 @@ class Tag(models.Model):
         return self.name
 
 class Recipe(models.Model):
-    text = models.TextField(verbose_name='Описание', blank=False)
-    name = models.CharField(verbose_name='Название', blank=False, max_length=200)
+    text = models.TextField(verbose_name='Описание')
+    name = models.CharField(verbose_name='Название', max_length=200)
     cooking_time = models.PositiveSmallIntegerField(verbose_name='Время приготовления в минутах')
-    author = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='recipes', null=True)
-    image = models.ImageField(upload_to='recipes/', null=True, blank=False)
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='recipes')
+    image = models.ImageField(upload_to='recipes/')
     tags = models.ManyToManyField(Tag, through='RecipeTag', verbose_name='Теги', related_name='tags')
     ingredients = models.ManyToManyField(
         Ingredient, 
         through='RecipeIngredientAmount', 
         verbose_name='Ингредиенты', 
         related_name='ingredients', 
-        blank=False)
+    )
 
     class Meta:
         verbose_name = 'Рецепт'

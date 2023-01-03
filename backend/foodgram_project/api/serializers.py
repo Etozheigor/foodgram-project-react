@@ -1,7 +1,18 @@
 from rest_framework import serializers
 from users.models import User
+import base64
+from django.core.files.base import ContentFile
 from recipes.models import Ingredient, Tag, Recipe, RecipeTag, RecipeIngredientAmount, ShoppingCart, Favorite, Follow
 from rest_framework.validators import UniqueValidator
+
+class Base64ImageField(serializers.ImageField):
+    def to_internal_value(self, data):
+        if isinstance(data, str) and data.startswith('data:image'):
+            format, imgstr = data.split(';base64,')  
+            ext = format.split('/')[-1]  
+            data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
+        return super().to_internal_value(data)
+
 
 class UserSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(max_length=254, validators=(UniqueValidator(queryset=User.objects.all(), message="Данный email уже сущестует"),))
@@ -36,7 +47,7 @@ class IngredientSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'measurement_unit')
         model = Ingredient
 
-class RecipeIngredientAmountSerializer(serializers.ModelSerializer):
+class RecipeIngredientAmountReadSerializer(serializers.ModelSerializer):
     id = serializers.ReadOnlyField(source='ingredient.id')
     name = serializers.ReadOnlyField(source='ingredient.name')
     measurement_unit = serializers.ReadOnlyField(source='ingredient.measurement_unit')
@@ -45,13 +56,18 @@ class RecipeIngredientAmountSerializer(serializers.ModelSerializer):
         model = RecipeIngredientAmount
         fields = ('id', 'name', 'measurement_unit', 'amount')
         
+class RecipeIngredientAmountWriteSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(required=True)
 
+    class Meta:
+        model = RecipeIngredientAmount
+        fields = ('id', 'amount')
 
 
 class RecipeReadSerializer(serializers.ModelSerializer):
     author = UserSerializer()
     tags = TagSerializer(many=True)
-    ingredients = RecipeIngredientAmountSerializer(
+    ingredients = RecipeIngredientAmountReadSerializer(
         many=True,
         required=True,
         source='recipe')
@@ -71,3 +87,27 @@ class RecipeReadSerializer(serializers.ModelSerializer):
 
     def get_is_in_shopping_cart(self, obj):
         return ShoppingCart.objects.filter(user=self.context['request'].user, recipes=obj).exists()
+
+
+class RecipeWriteSerializer(serializers.ModelSerializer):
+    image = Base64ImageField(required=True)
+    ingredients = RecipeIngredientAmountWriteSerializer(
+        many=True,
+        required=True,)
+
+    class Meta:
+        model = Recipe
+        fields = ('ingredients', 'tags', 'image', 'name', 'text', 'cooking_time')
+
+
+    def create(self, validated_data):
+        print(validated_data)
+        ingredients = self.validated_data['ingredients']
+        recipe = Recipe.objects.create(**validated_data)
+        for ingredient_amount_dict in ingredients:
+            if Ingredient.objects.filter(id=ingredient_amount_dict['id']).exists():
+                RecipeIngredientAmount.objects.create(
+                    ingredient= ingredient_amount_dict['id'],
+                    recipe=recipe,
+                    amount = ingredient_amount_dict['amount'])
+            raise serializers.ValidationError('несуществующий ингредиент')
