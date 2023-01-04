@@ -35,8 +35,7 @@ class Recipe(models.Model):
     ingredients = models.ManyToManyField(
         Ingredient, 
         through='RecipeIngredientAmount', 
-        verbose_name='Ингредиенты', 
-        related_name='ingredients', 
+        verbose_name='Ингредиенты',
     )
 
     class Meta:
