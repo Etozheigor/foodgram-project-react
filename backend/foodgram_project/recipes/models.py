@@ -57,8 +57,8 @@ class RecipeTag(models.Model):
         return f'Теги рецепта {self.recipe}'
 
 class RecipeIngredientAmount(models.Model):
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name='recipe')
-    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE, related_name='ingredient')
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name='recipe_to_ingredient')
+    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE, related_name='ingredient_to_recipe')
     amount = models.PositiveIntegerField(verbose_name='Количество')
 
     class Meta:
@@ -91,8 +91,8 @@ class Favorite(models.Model):
         return f'Избраные рецепты пользователя {self.user}'
 
 class Follow(models.Model):
-    follower = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='Пользователь', related_name='following')
-    following = models.ManyToManyField(User, verbose_name='Подписки')
+    follower = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='Пользователь', related_name='followings')
+    following = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='Подписки', related_name='followers')
 
     class Meta:
         verbose_name = 'Подписка'
