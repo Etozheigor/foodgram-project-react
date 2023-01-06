@@ -86,10 +86,10 @@ class RecipeReadSerializer(serializers.ModelSerializer):
             'name', 'image', 'text', 'cooking_time')
 
     def get_is_favorited(self, obj):
-        return Favorite.objects.filter(user=self.context['request'].user, recipes=obj).exists()
+        return Favorite.objects.filter(user=self.context['request'].user, recipe=obj).exists()
 
     def get_is_in_shopping_cart(self, obj):
-        return ShoppingCart.objects.filter(user=self.context['request'].user, recipes=obj).exists()
+        return ShoppingCart.objects.filter(user=self.context['request'].user, recipe=obj).exists()
 
 
 class RecipeWriteSerializer(serializers.ModelSerializer):
@@ -142,7 +142,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         return RecipeReadSerializer(instance=instance, context=context).data
 
 
-class SubscribeRecipeSerializer(serializers.ModelSerializer):
+class SubscribeFavoriteRecipeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Recipe
@@ -152,7 +152,7 @@ class SubscribeRecipeSerializer(serializers.ModelSerializer):
 class SubscribeUserSerializer(serializers.ModelSerializer):
     is_subscribed = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
-    recipes = SubscribeRecipeSerializer(many=True)
+    recipes = SubscribeFavoriteRecipeSerializer(many=True)
 
     class Meta:
         model = User
@@ -171,23 +171,31 @@ class SubscribeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Follow
         fields = ()
-        # validators = (
-        #     UniqueTogetherValidator(
-        #         queryset=Follow.objects.all(),
-        #         fields=('follower', 'following'),
-        #         message='Невозможно подписаться, так как вы уже подписаны'
-        #     ),
-        # )
-
-    def validate(self, data):
-        print(self.context['request'].user)
-        print(data)
-        if self.context['request'].user == User.objects.get(id=self.kwargs.get('user_id')):
-            raise serializers.ValidationError('Невозможно подписаться'
-                                              'на самого себя')
-        return data
 
     def to_representation(self, instance):
         request = self.context.get('request')
         context = {'request': request}
         return SubscribeUserSerializer(instance=instance.following, context=context).data
+
+class FavoriteSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Favorite
+        fields = ('user', 'recipe')
+
+    def to_representation(self, instance):
+        request = self.context.get('request')
+        context = {'request': request}
+        return SubscribeFavoriteRecipeSerializer(instance=instance.recipe, context=context).data
+
+
+class ShoppingCartSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ShoppingCart
+        fields = ('user', 'recipe')
+
+    def to_representation(self, instance):
+        request = self.context.get('request')
+        context = {'request': request}
+        return SubscribeFavoriteRecipeSerializer(instance=instance.recipe, context=context).data

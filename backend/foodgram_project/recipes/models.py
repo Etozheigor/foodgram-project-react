@@ -36,9 +36,13 @@ class Recipe(models.Model):
         Ingredient, 
         through='RecipeIngredientAmount', 
         verbose_name='Ингредиенты',
+        related_name='ingredients'
     )
+    pub_date = models.DateTimeField(auto_now_add=True,
+                                    verbose_name='Дата публикации',)
 
     class Meta:
+        ordering = ('-pub_date',)
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
 
@@ -70,7 +74,7 @@ class RecipeIngredientAmount(models.Model):
 
 class ShoppingCart(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='Пользователь', related_name='shopping_cart')
-    recipes = models.ManyToManyField(Recipe, verbose_name='Рецепт')
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, verbose_name='Рецепт', related_name='in_shopping_carts')
 
     class Meta:
         verbose_name = 'Список покупок'
@@ -80,8 +84,8 @@ class ShoppingCart(models.Model):
         return f'Список покупок пользователя {self.user}'
 
 class Favorite(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='Пользователь', related_name='favorite')
-    recipes = models.ManyToManyField(Recipe, verbose_name='Рецепт')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='Пользователь', related_name='favorite_recipes')
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, verbose_name='Рецепт', related_name='users')
 
     class Meta:
         verbose_name = 'Избраный рецепт'
