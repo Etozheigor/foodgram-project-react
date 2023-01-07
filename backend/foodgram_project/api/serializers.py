@@ -7,6 +7,7 @@ from rest_framework.validators import UniqueValidator
 from django.shortcuts import get_object_or_404
 from rest_framework.validators import UniqueTogetherValidator
 
+
 class Base64ImageField(serializers.ImageField):
     def to_internal_value(self, data):
         if isinstance(data, str) and data.startswith('data:image'):
@@ -24,17 +25,22 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ('email', 'id',  'username', 'first_name', 'last_name', 'is_subscribed')
 
-
     def get_is_subscribed(self, obj):
         return Follow.objects.filter(follower=self.context['request'].user, following=obj).exists()
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(max_length=254, validators=(UniqueValidator(queryset=User.objects.all(), message="Данный email уже сущестует"),))
+    password = serializers.CharField(style={"input_type": "password"}, write_only=True)
 
     class Meta:
         model = User
-        fields = ('id', 'email', 'username', 'last_name', 'first_name')
+        fields = ('id', 'email', 'username', 'last_name', 'first_name', 'password')
+
+    def validate_password(self, value):
+        if len(value) < 8:
+            raise serializers.ValidationError('Длина пароля должна быть не менее 8 символов')
+        return value
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -77,7 +83,6 @@ class RecipeReadSerializer(serializers.ModelSerializer):
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
 
-
     class Meta:
         model = Recipe
         fields = (
@@ -103,6 +108,32 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         model = Recipe
         fields = ('ingredients', 'tags', 'image', 'name', 'text', 'cooking_time')
 
+
+    def validate_cooking_time(self, value):
+        if value < 1:
+            raise serializers.ValidationError('Время приготовления не может быть меньше 1 минуты!')
+        return value
+    
+    def validate_tags(self, value):
+        if value:
+            tag_list = []
+            for tag in value:
+                if tag in tag_list:
+                    raise serializers.ValidationError('Теги рецепта не должны повторяться!')
+                tag_list.append(tag)
+            return value
+        raise serializers.ValidationError('У рецепта должен быть минимум 1 тег!')
+
+    def validate_ingredients(self, value):
+        if value:
+            ingredient_list = []
+            for ingredient in value:
+                if ingredient['id'] in ingredient_list:
+                    raise serializers.ValidationError('Ингредиенты рецепта не должны повторяться!')
+                ingredient_list.append(ingredient['id'])
+            return value
+        raise serializers.ValidationError('У рецепта должен быть минимум 1 ингредиент!')
+        
     def create(self, validated_data):
         ingredients_amounts = validated_data.pop('recipe_to_ingredient')
         tags = validated_data.pop('tags')
@@ -183,6 +214,11 @@ class FavoriteSerializer(serializers.ModelSerializer):
         model = Favorite
         fields = ('user', 'recipe')
 
+    def validate(self, data):
+        if Favorite.objects.filter(user=data['user'], recipe=data['recipe']).exists():
+            raise serializers.ValidationError('Невозможно добавить рецепт в избранное, так как он уже был добавлен!')
+        return data
+
     def to_representation(self, instance):
         request = self.context.get('request')
         context = {'request': request}
@@ -195,6 +231,11 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
         model = ShoppingCart
         fields = ('user', 'recipe')
 
+    def validate(self, data):
+        if ShoppingCart.objects.filter(user=data['user'], recipe=data['recipe']).exists():
+            raise serializers.ValidationError('Невозможно добавить рецепт в список покупок, так как он уже был добавлен!')
+        return data
+    
     def to_representation(self, instance):
         request = self.context.get('request')
         context = {'request': request}

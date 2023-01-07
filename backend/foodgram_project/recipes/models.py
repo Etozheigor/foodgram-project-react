@@ -3,8 +3,8 @@ from users.models import User
 
 
 class Ingredient(models.Model):
-    name = models.CharField(verbose_name= 'Название', blank=False, max_length=200)
-    measurement_unit = models.CharField(verbose_name='Единица измерения', blank=True, max_length=200)
+    name = models.CharField(verbose_name= 'Название', max_length=200)
+    measurement_unit = models.CharField(verbose_name='Единица измерения', max_length=200)
 
     class Meta:
         verbose_name = 'Ингредиент'
@@ -14,9 +14,9 @@ class Ingredient(models.Model):
         return f'{self.name}, {self.measurement_unit}'
 
 class Tag(models.Model):
-    name = models.CharField(verbose_name= 'Название', blank=False, max_length=200)
+    name = models.CharField(verbose_name= 'Название', unique=True, max_length=200)
     color = models.CharField(verbose_name='Цвет в HEX', null=True, max_length=7)
-    slug = models.SlugField(verbose_name='Уникальный слаг', null=True, max_length=200)
+    slug = models.SlugField(verbose_name='Уникальный слаг', unique=True, max_length=200)
 
     class Meta:
         verbose_name = 'Тег'
@@ -56,6 +56,7 @@ class RecipeTag(models.Model):
     class Meta:
         verbose_name = 'Тег рецепта'
         verbose_name_plural = 'Теги рецепта'
+        constraints = (models.UniqueConstraint(fields=('recipe', 'tag'), name='unique_recipe_tag'),)
 
     def __str__(self):
         return f'Теги рецепта {self.recipe}'
@@ -68,6 +69,7 @@ class RecipeIngredientAmount(models.Model):
     class Meta:
         verbose_name = 'Ингредиент рецепта'
         verbose_name_plural = 'Ингредиенты рецепта'
+        constraints = (models.UniqueConstraint(fields=('recipe', 'ingredient'), name='unique_recipe_ingredient'),)
 
     def __str__(self):
         return f'Список ингредиентов для рецепта {self.recipe}'
@@ -79,6 +81,7 @@ class ShoppingCart(models.Model):
     class Meta:
         verbose_name = 'Список покупок'
         verbose_name_plural = 'Списки покупок'
+        constraints = (models.UniqueConstraint(fields=('user', 'recipe'), name='unique_shopping_cart_recipe'),)
 
     def __str__(self):
         return f'Список покупок пользователя {self.user}'
@@ -86,10 +89,12 @@ class ShoppingCart(models.Model):
 class Favorite(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='Пользователь', related_name='favorite_recipes')
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, verbose_name='Рецепт', related_name='users')
+    
 
     class Meta:
         verbose_name = 'Избраный рецепт'
         verbose_name_plural = 'Избранные рецепты'
+        constraints = (models.UniqueConstraint(fields=('user', 'recipe'), name='unique_favorite_recipe'),)
 
     def __str__(self):
         return f'Избраные рецепты пользователя {self.user}'
@@ -101,6 +106,7 @@ class Follow(models.Model):
     class Meta:
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
+        constraints = (models.UniqueConstraint(fields=('follower', 'following'), name='unique_follow'),)
 
     def __str__(self):
         return f'Подписки пользоваеля {self.follower}'

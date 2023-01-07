@@ -76,6 +76,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
                     shopping_cart_dict[name_in_shopping_cart] = shopping_cart_dict[name_in_shopping_cart] + amount
                 else:
                     shopping_cart_dict[name_in_shopping_cart] = amount
+        if len(shopping_cart_dict.keys()) == 0:
+            return Response({'errors': 'Невозможно скачать список покупок так как он пуст!'}, status=status.HTTP_400_BAD_REQUEST)
         with open('api/shopping_cart_to_download/shopping_cart.txt', 'w', encoding='utf-8') as shopping_cart_file:
             for ingredient in shopping_cart_dict.keys():
                 shopping_cart_file.write(f'- {ingredient} - {shopping_cart_dict[ingredient]}\n')
@@ -101,7 +103,7 @@ def subscribe(request, pk):
     if Follow.objects.filter(follower=follower, following=following).exists():
         Follow.objects.get(follower=follower, following=following).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-    return Response({'errors':'Невозможно отписаться, так как вы еще не были подписаны!'}, status=status.HTTP_400_BAD_REQUEST)
+    return Response({'errors':'Невозможно отписаться, так как вы еще не подписаны!'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class SubscribtionsViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
