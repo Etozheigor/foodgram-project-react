@@ -1,9 +1,9 @@
-from  recipes.models import Ingredient
 from csv import DictReader
-from django.core.management import BaseCommand
 from pathlib import Path
 
+from django.core.management import BaseCommand
 
+from recipes.models import Ingredient
 
 
 class Command(BaseCommand):

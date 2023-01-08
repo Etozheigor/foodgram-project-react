@@ -1,31 +1,43 @@
-from users.models import User
-from django.shortcuts import get_object_or_404
-from recipes.models import Ingredient, Tag, Recipe, RecipeTag, RecipeIngredientAmount, ShoppingCart, Favorite, Follow
-from .serializers import (TagSerializer, IngredientSerializer, ShoppingCartSerializer,
- RecipeReadSerializer, RecipeWriteSerializer, SubscribeSerializer, SubscribeUserSerializer, FavoriteSerializer)
-
-from rest_framework import viewsets, mixins, generics, views, status
-from rest_framework.decorators import action, api_view
-from rest_framework.response import Response
-from django.http import HttpResponse
 from wsgiref.util import FileWrapper
+
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
+from rest_framework import generics, mixins, status, views, viewsets
+from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+
+from recipes.models import (Favorite, Follow, Ingredient, Recipe,
+                            RecipeIngredientAmount, RecipeTag, ShoppingCart,
+                            Tag)
+from users.models import User
+
+from .permissions import AdminOnly, AuthorOrAdminOrReadOnly
+from .serializers import (FavoriteSerializer, IngredientSerializer,
+                          RecipeReadSerializer, RecipeWriteSerializer,
+                          ShoppingCartSerializer, SubscribeSerializer,
+                          SubscribeUserSerializer, TagSerializer)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     pagination_class = None
+    permission_classes = (AdminOnly,)
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     pagination_class = None
+    permission_classes = (AdminOnly,)
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeReadSerializer
+    permission_classes = (AuthorOrAdminOrReadOnly,)
+
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -55,15 +67,15 @@ class RecipeViewSet(viewsets.ModelViewSet):
             {'errors': f'Невозможно удалить рецепт из списка {model._meta.verbose_name_plural.title()}, так как он еще не был добавлен!'}, status=status.HTTP_400_BAD_REQUEST)
 
 
-    @action(methods=['POST', 'DELETE'], detail=True)
+    @action(methods=['POST', 'DELETE'], detail=True, permission_classes=(IsAuthenticated,))
     def favorite(self, request, pk):
         return self.post_delete_for_actions(model=Favorite, serializer=FavoriteSerializer, pk=pk)
 
-    @action(methods=['POST', 'DELETE'], detail=True)
+    @action(methods=['POST', 'DELETE'], detail=True, permission_classes=(IsAuthenticated,))
     def shopping_cart(self, request, pk):
         return self.post_delete_for_actions(model=ShoppingCart, serializer=ShoppingCartSerializer, pk=pk)
 
-    @action(methods=['GET'], detail=False)
+    @action(methods=['GET'], detail=False, permission_classes=(IsAuthenticated,))
     def download_shopping_cart(self, request):
         shopping_cart_queryset = request.user.shopping_cart.all()
         shopping_cart_dict = {}
@@ -84,11 +96,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
         with open('api/shopping_cart_to_download/shopping_cart.txt', 'r', encoding='utf-8') as shopping_cart_file:      
             return HttpResponse(shopping_cart_file, content_type='text/plain')
 
-        
 
 
 
 @api_view(['POST', 'DELETE'])
+@permission_classes((IsAuthenticated,))
 def subscribe(request, pk):
     follower = request.user
     following = get_object_or_404(User, id=pk)
@@ -108,6 +120,7 @@ def subscribe(request, pk):
 
 class SubscribtionsViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     serializer_class = SubscribeSerializer
+    permission_classes =(IsAuthenticated,)
 
     def get_queryset(self):
         user = self.request.user

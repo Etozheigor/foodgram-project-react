@@ -1,6 +1,8 @@
-from rest_framework. routers import DefaultRouter
-from .views import TagViewSet, IngredientViewSet, RecipeViewSet, subscribe, SubscribtionsViewSet
 from django.urls import include, path
+from rest_framework.routers import DefaultRouter
+
+from .views import (IngredientViewSet, RecipeViewSet, SubscribtionsViewSet,
+                    TagViewSet, subscribe)
 
 app_name = 'api'
 

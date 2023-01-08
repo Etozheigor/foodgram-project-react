@@ -1,5 +1,6 @@
-from datetime import timedelta
 import os
+from datetime import timedelta
+
 from dotenv import load_dotenv
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -33,11 +34,9 @@ INSTALLED_APPS = [
     'api.apps.ApiConfig',
     'recipes.apps.RecipesConfig',
     'rest_framework',
-    'rest_framework.authtoken',
     'djoser',
+    'rest_framework.authtoken',
     
-    
-
 ]
 
 MIDDLEWARE = [
@@ -126,12 +125,6 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
-# REST_FRAMEWORK = {
-#     'DEFAULT_PERMISSION_CLASSES': [
-#         'rest_framework.permissions.AllowAny',
-#     ],
-# }
-
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny', 
@@ -141,7 +134,8 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',
     ],
 
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+
     'PAGE_SIZE': 5,
 }
 
@@ -151,5 +145,9 @@ DJOSER = {
         'user_create': 'api.serializers.UserCreateSerializer',
         'current_user': 'api.serializers.UserSerializer' },
     'LOGIN_FIELD': 'email',
-    
+    'PERMISSIONS': {
+        'user': ['rest_framework.permissions.AllowAny', ],
+        'user_list': ['rest_framework.permissions.AllowAny', ]
+    },
+    'HIDE_USERS': False,
 }

@@ -1,4 +1,5 @@
 from django.db import models
+
 from users.models import User
 
 
@@ -15,7 +16,7 @@ class Ingredient(models.Model):
 
 class Tag(models.Model):
     name = models.CharField(verbose_name= 'Название', unique=True, max_length=200)
-    color = models.CharField(verbose_name='Цвет в HEX', null=True, max_length=7)
+    color = models.CharField(verbose_name='Цвет в HEX', unique=True,  max_length=7)
     slug = models.SlugField(verbose_name='Уникальный слаг', unique=True, max_length=200)
 
     class Meta:
@@ -88,7 +89,7 @@ class ShoppingCart(models.Model):
 
 class Favorite(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='Пользователь', related_name='favorite_recipes')
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, verbose_name='Рецепт', related_name='users')
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, verbose_name='Рецепт', related_name='favorite_recipes')
     
 
     class Meta:

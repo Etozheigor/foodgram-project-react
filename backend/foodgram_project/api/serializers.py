@@ -1,11 +1,16 @@
-from rest_framework import serializers
-from users.models import User
 import base64
+
 from django.core.files.base import ContentFile
-from recipes.models import Ingredient, Tag, Recipe, RecipeTag, RecipeIngredientAmount, ShoppingCart, Favorite, Follow
-from rest_framework.validators import UniqueValidator
 from django.shortcuts import get_object_or_404
-from rest_framework.validators import UniqueTogetherValidator
+from djoser.serializers import \
+    UserCreateSerializer as DjoserUserCreateSerializer
+from rest_framework import serializers
+from rest_framework.validators import UniqueValidator
+
+from recipes.models import (Favorite, Follow, Ingredient, Recipe,
+                            RecipeIngredientAmount, RecipeTag, ShoppingCart,
+                            Tag)
+from users.models import User
 
 
 class Base64ImageField(serializers.ImageField):
@@ -17,6 +22,7 @@ class Base64ImageField(serializers.ImageField):
         return super().to_internal_value(data)
 
 
+
 class UserSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(max_length=254, validators=(UniqueValidator(queryset=User.objects.all(), message="Данный email уже сущестует"),))
     is_subscribed = serializers.SerializerMethodField()
@@ -26,21 +32,17 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('email', 'id',  'username', 'first_name', 'last_name', 'is_subscribed')
 
     def get_is_subscribed(self, obj):
-        return Follow.objects.filter(follower=self.context['request'].user, following=obj).exists()
+        if self.context['request'].user.is_authenticated:
+            return Follow.objects.filter(follower=self.context['request'].user, following=obj).exists()
+        return False
 
 
-class UserCreateSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(max_length=254, validators=(UniqueValidator(queryset=User.objects.all(), message="Данный email уже сущестует"),))
-    password = serializers.CharField(style={"input_type": "password"}, write_only=True)
-
+class UserCreateSerializer(DjoserUserCreateSerializer):
+    
     class Meta:
         model = User
         fields = ('id', 'email', 'username', 'last_name', 'first_name', 'password')
 
-    def validate_password(self, value):
-        if len(value) < 8:
-            raise serializers.ValidationError('Длина пароля должна быть не менее 8 символов')
-        return value
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -91,10 +93,14 @@ class RecipeReadSerializer(serializers.ModelSerializer):
             'name', 'image', 'text', 'cooking_time')
 
     def get_is_favorited(self, obj):
-        return Favorite.objects.filter(user=self.context['request'].user, recipe=obj).exists()
+        if self.context['request'].user.is_authenticated:
+            return Favorite.objects.filter(user=self.context['request'].user, recipe=obj).exists()
+        return False
 
     def get_is_in_shopping_cart(self, obj):
-        return ShoppingCart.objects.filter(user=self.context['request'].user, recipe=obj).exists()
+        if self.context['request'].user.is_authenticated:
+            return ShoppingCart.objects.filter(user=self.context['request'].user, recipe=obj).exists()
+        return False
 
 
 class RecipeWriteSerializer(serializers.ModelSerializer):
@@ -128,11 +134,14 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         if value:
             ingredient_list = []
             for ingredient in value:
+                if ingredient['amount'] < 1:
+                    raise serializers.ValidationError('Количество каждого ингредиента должно быть не меньше 1!')
                 if ingredient['id'] in ingredient_list:
                     raise serializers.ValidationError('Ингредиенты рецепта не должны повторяться!')
                 ingredient_list.append(ingredient['id'])
             return value
         raise serializers.ValidationError('У рецепта должен быть минимум 1 ингредиент!')
+        
         
     def create(self, validated_data):
         ingredients_amounts = validated_data.pop('recipe_to_ingredient')
