@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'djoser',
     'rest_framework.authtoken',
+    'django_filters',
     
 ]
 
@@ -134,9 +135,9 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',
     ],
 
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'DEFAULT_PAGINATION_CLASS': 'api.pagination.CustomPagination',
 
-    'PAGE_SIZE': 5,
+
 }
 
 DJOSER = {

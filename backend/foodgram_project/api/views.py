@@ -1,8 +1,9 @@
 from wsgiref.util import FileWrapper
-
+from django_filters.rest_framework import DjangoFilterBackend
+from .pagination import CustomPagination
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
-from rest_framework import generics, mixins, status, views, viewsets
+from rest_framework import generics, mixins, status, views, viewsets, filters
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -19,24 +20,30 @@ from .serializers import (FavoriteSerializer, IngredientSerializer,
                           SubscribeUserSerializer, TagSerializer)
 
 
+
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    pagination_class = None
     permission_classes = (AdminOnly,)
+    pagination_class = None
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
-    pagination_class = None
     permission_classes = (AdminOnly,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('^name',)
+    pagination_class = None
+
+
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeReadSerializer
     permission_classes = (AuthorOrAdminOrReadOnly,)
+    pagination_class = CustomPagination
 
 
     def perform_create(self, serializer):
@@ -120,7 +127,8 @@ def subscribe(request, pk):
 
 class SubscribtionsViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     serializer_class = SubscribeSerializer
-    permission_classes =(IsAuthenticated,)
+    permission_classes = (IsAuthenticated,)
+    pagination_class = CustomPagination
 
     def get_queryset(self):
         user = self.request.user
