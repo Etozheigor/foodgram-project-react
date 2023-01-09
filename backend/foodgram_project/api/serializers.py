@@ -192,7 +192,7 @@ class SubscribeFavoriteRecipeSerializer(serializers.ModelSerializer):
 class SubscribeUserSerializer(serializers.ModelSerializer):
     is_subscribed = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
-    recipes = SubscribeFavoriteRecipeSerializer(many=True)
+    recipes = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -204,6 +204,11 @@ class SubscribeUserSerializer(serializers.ModelSerializer):
     def get_recipes_count(self, obj):
         return obj.recipes.all().count()
 
+    def get_recipes(self, obj):
+        if self.context['request'].query_params.get('recipes_limit'):
+            limit = int(self.context['request'].query_params.get('recipes_limit'))
+            return SubscribeFavoriteRecipeSerializer(obj.recipes.all(), many=True).data[0:limit]
+        return SubscribeFavoriteRecipeSerializer(obj.recipes.all(), many=True).data
 
 
 class SubscribeSerializer(serializers.ModelSerializer):
