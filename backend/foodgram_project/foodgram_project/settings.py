@@ -1,14 +1,8 @@
 import os
-from datetime import timedelta
 
 from dotenv import load_dotenv
 
-# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
 load_dotenv()
 
@@ -19,9 +13,6 @@ SECRET_KEY = '13v0oj4l24=f1wq(l__c(vrw9isb3ua^#&heoge@u_atbco&83'
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
-
-
-# Application definition
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -37,7 +28,6 @@ INSTALLED_APPS = [
     'djoser',
     'rest_framework.authtoken',
     'django_filters',
-    
 ]
 
 MIDDLEWARE = [
@@ -70,20 +60,12 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'foodgram_project.wsgi.application'
 
-
-# Database
-# https://docs.djangoproject.com/en/2.2/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
-
-
-# Password validation
-# https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
 
 AUTH_USER_MODEL = 'users.User'
 
@@ -102,10 +84,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
-# Internationalization
-# https://docs.djangoproject.com/en/2.2/topics/i18n/
-
 LANGUAGE_CODE = 'ru-ru'
 
 TIME_ZONE = 'UTC'
@@ -116,35 +94,29 @@ USE_L10N = True
 
 USE_TZ = True
 
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/2.2/howto/static-files/
-
 STATIC_URL = '/static/'
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
+MEDIA_URL = '/media/'
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny', 
+        'rest_framework.permissions.AllowAny',
     ],
-
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
     ],
-
     'DEFAULT_PAGINATION_CLASS': 'api.pagination.CustomPagination',
-
-
 }
 
 DJOSER = {
-    'SERIALIZERS' : {
-        'user' : 'api.serializers.UserSerializer',
+    'SERIALIZERS': {
+        'user': 'api.serializers.UserSerializer',
         'user_create': 'api.serializers.UserCreateSerializer',
-        'current_user': 'api.serializers.UserSerializer' },
+        'current_user': 'api.serializers.UserSerializer'},
     'LOGIN_FIELD': 'email',
     'PERMISSIONS': {
         'user': ['rest_framework.permissions.AllowAny', ],
