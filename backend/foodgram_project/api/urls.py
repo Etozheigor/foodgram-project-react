@@ -18,7 +18,7 @@ v1_router.register(
 
 urlpatterns = [
     path('', include(v1_router.urls)),
-    path('users/<int:pk>/subscribe/', subscribe),
+    path('users/<int:pk>/subscribe/', subscribe, name='subscribe'),
     path('', include('djoser.urls')),
     path('auth/', include('djoser.urls.authtoken')),
 ]

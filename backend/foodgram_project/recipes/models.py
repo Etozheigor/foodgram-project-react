@@ -52,7 +52,7 @@ class Recipe(models.Model):
         Ingredient,
         through='RecipeIngredientAmount',
         verbose_name='Ингредиенты',
-        related_name='ingredients'
+        related_name='recipes'
     )
     pub_date = models.DateTimeField(auto_now_add=True,
                                     verbose_name='Дата публикации',)

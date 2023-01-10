@@ -10,7 +10,6 @@ from rest_framework.response import Response
 from recipes.models import (Favorite, Follow, Ingredient, Recipe, ShoppingCart,
                             Tag)
 from users.models import User
-
 from .filters import IngredientSearchFilter, RecipeFilter
 from .pagination import CustomPagination
 from .permissions import AuthorOrAdminOrReadOnly
@@ -53,9 +52,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
-    def perform_update(self, serializer):
-        serializer.save(author=self.request.user)
-
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
             return RecipeReadSerializer
@@ -95,35 +91,34 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @action(methods=['GET'], detail=False,
             permission_classes=(IsAuthenticated,))
     def download_shopping_cart(self, request):
-        shopping_cart_queryset = request.user.shopping_cart.all()
-        shopping_cart_dict = {}
-        for shopping_cart in shopping_cart_queryset:
-            ingredients_queryset = (
-                shopping_cart.recipe.recipe_to_ingredient.all())
-            for ingredient_amount in ingredients_queryset:
-                ingredient, amount = (
-                    ingredient_amount.ingredient, ingredient_amount.amount)
-                name_in_shopping_cart = (
-                    f'{ingredient.name}'
-                    f'({ingredient.measurement_unit})')
-                if shopping_cart_dict.get(name_in_shopping_cart):
-                    shopping_cart_dict[name_in_shopping_cart] = (
-                        shopping_cart_dict[name_in_shopping_cart] + amount)
-                else:
-                    shopping_cart_dict[name_in_shopping_cart] = amount
-        if len(shopping_cart_dict.keys()) == 0:
+        ingredient_list = request.user.shopping_cart.all().values_list(
+            'recipe__recipe_to_ingredient__ingredient',
+            'recipe__recipe_to_ingredient__amount')
+        shopping_cart = {}
+        for ingredient_amount in ingredient_list:
+            ingredient = get_object_or_404(Ingredient, id=ingredient_amount[0])
+            amount = ingredient_amount[1]
+            name_in_shopping_cart = (
+                f'{ingredient.name}'
+                f'({ingredient.measurement_unit})')
+            if shopping_cart.get(name_in_shopping_cart):
+                shopping_cart[name_in_shopping_cart] = (
+                    shopping_cart[name_in_shopping_cart] + amount)
+            else:
+                shopping_cart[name_in_shopping_cart] = amount
+        if len(shopping_cart.keys()) == 0:
             return Response({'errors': 'Невозможно скачать список покупок'
                              'так как он пуст!'},
                             status=status.HTTP_400_BAD_REQUEST)
-        with open('api/shopping_cart_to_download/shopping_cart.txt',
-                  'w', encoding='utf-8') as shopping_cart_file:
-            for ingredient in shopping_cart_dict.keys():
-                shopping_cart_file.write(
-                    f'- {ingredient} - '
-                    f'{shopping_cart_dict[ingredient]}\n')
-        with open('api/shopping_cart_to_download/shopping_cart.txt',
-                  'r', encoding='utf-8') as shopping_cart_file:
-            return HttpResponse(shopping_cart_file, content_type='text/plain')
+        file_name = 'shopping_cart_to_download'
+        lines = []
+        for ingredient in shopping_cart.keys():
+            lines.append(f'- {ingredient} - {shopping_cart[ingredient]}')
+        response_content = '\n'.join(lines)
+        response = HttpResponse(
+            response_content, content_type="text/plain, charset=utf8")
+        response['Content-Disposition'] = f'attachment; filename={file_name}'
+        return response
 
 
 @api_view(['POST', 'DELETE'])
