@@ -7,7 +7,6 @@ from rest_framework.validators import UniqueValidator
 from recipes.models import (Favorite, Follow, Ingredient, Recipe,
                             RecipeIngredientAmount, ShoppingCart, Tag)
 from users.models import User
-
 from .fields import Base64ImageField
 
 
@@ -170,17 +169,13 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
             'У рецепта должен быть минимум 1 ингредиент!')
 
     def create_update_recipe(self, recipe, ingredients_amounts, tags):
-        for ingredient_amount in ingredients_amounts:
-            ingredient_id = ingredient_amount['id']
-            ingredient = get_object_or_404(Ingredient, id=ingredient_id)
-            recipe_ingredient_list = []
-            recipe_ingredient_list.append(
-                RecipeIngredientAmount(
-                    recipe=recipe,
-                    ingredient=ingredient,
-                    amount=ingredient_amount['amount']))
-            RecipeIngredientAmount.objects.bulk_create(
-                recipe_ingredient_list)
+        RecipeIngredientAmount.objects.bulk_create(
+            [RecipeIngredientAmount(
+                recipe=recipe,
+                ingredient=get_object_or_404(
+                    Ingredient, id=ingredient_amount['id']),
+                amount=ingredient_amount['amount'])
+             for ingredient_amount in ingredients_amounts])
         for tag in tags:
             recipe.tags.add(tag)
 

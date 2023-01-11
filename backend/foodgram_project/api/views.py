@@ -1,15 +1,16 @@
+from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
+from recipes.models import (Favorite, Follow, Ingredient, Recipe, ShoppingCart,
+                            Tag)
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import (IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
-
-from recipes.models import (Favorite, Follow, Ingredient, Recipe, ShoppingCart,
-                            Tag)
 from users.models import User
+
 from .filters import IngredientSearchFilter, RecipeFilter
 from .pagination import CustomPagination
 from .permissions import AuthorOrAdminOrReadOnly
@@ -92,8 +93,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
             permission_classes=(IsAuthenticated,))
     def download_shopping_cart(self, request):
         ingredient_list = request.user.shopping_cart.all().values_list(
-            'recipe__recipe_to_ingredient__ingredient',
-            'recipe__recipe_to_ingredient__amount')
+            'recipe__recipe_to_ingredient__ingredient',).annotate(
+                amount=Sum('recipe__recipe_to_ingredient__amount'))
         shopping_cart = {}
         for ingredient_amount in ingredient_list:
             ingredient = get_object_or_404(Ingredient, id=ingredient_amount[0])
