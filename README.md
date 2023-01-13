@@ -1,1 +1,1 @@
-# praktikum_new_diplom
+Адрес сервера: http://158.160.34.78/
