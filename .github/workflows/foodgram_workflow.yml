@@ -39,9 +39,11 @@ jobs:
         passphrase: ${{ secrets.PASSPHRASE }}
         script: |
             sudo docker-compose stop
-            sudo docker image rm etozheigor/foodgram_backend
+            sudo docker-compose rm backend
+            y
+            sudo docker image rm etozheigor/foodgram_backend:latest
             sudo docker pull etozheigor/foodgram_backend
-            sudo docker-compose up -d --build
+            sudo docker-compose up -d
             docker-compose exec etozheigor-backend-1 python manage.py makemigrations
             docker-compose exec etozheigor-backend-1 python manage.py migrate
             docker-compose exec etozheigor-backend-1 python manage.py collectstatic --no-input 
