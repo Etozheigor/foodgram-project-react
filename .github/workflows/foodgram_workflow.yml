@@ -39,9 +39,8 @@ jobs:
         passphrase: ${{ secrets.PASSPHRASE }}
         script: |
             sudo docker-compose stop
-            sudo docker-compose rm backend
-            y
-            sudo docker image rm etozheigor/foodgram_backend:latest
+            sudo docker container rm etozheigor-backend-1
+            sudo docker image rm etozheigor/foodgram_backend
             sudo docker pull etozheigor/foodgram_backend
             touch .env
             echo SECRET_KEY=${{ secrets.SECRET_KEY }} >> .env
