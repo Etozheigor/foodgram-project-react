@@ -6,7 +6,7 @@ services:
     env_file:
       - ./.env
   backend:
-    image: etozheigor/foodgram_backend:latest
+    image: etozheigor/foodgram_backend
     restart: always
     volumes:
       - static_value:/app/static/
