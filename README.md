@@ -11,8 +11,11 @@ Foodgram - это агрегатор рецептов или продуктов�
 - Django
 - DRF
 - Djoser
-- PostgreSQL
 - Docker
+- PostgreSQL
+- nginx
+- gunicorn
+
 
 Фронтенд написан на React
 
